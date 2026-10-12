@@ -1,21 +1,124 @@
+import { useState, useMemo } from "react"
+import { MOCK_CAFES } from "@/data/mockdata"
+import type { Cafe } from "@/types/cafe"
+import { CafeCard } from "@/components/ui/cafecard"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { X, Tag, Search } from "lucide-react"
 
-export function App() {
+export default function App() {
+  const [cafes, setCafes] = useState<Cafe[]>(MOCK_CAFES)
+  const [searchName, setSearchName] = useState("")
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+
+  // Extract all unique tags across all cafes for the quick filter pills
+  const allTags = useMemo(() => {
+    const tags = new Set<string>()
+    cafes.forEach((c) => c.tags.forEach((t) => tags.add(t)))
+    return Array.from(tags)
+  }, [cafes])
+
+  // Filter: Search matches cafe name, pill matches selected tag
+  const filteredCafes = useMemo(() => {
+    const query = searchName.trim().toLowerCase()
+
+    return cafes.filter((cafe) => {
+      // 1. Text input searches only the cafe name
+      const matchesName = query
+        ? cafe.name.toLowerCase().includes(query)
+        : true
+
+      // 2. Active pill filter matches tags
+      const matchesTag = activeTag
+        ? cafe.tags.includes(activeTag)
+        : true
+
+      return matchesName && matchesTag
+    })
+  }, [cafes, searchName, activeTag])
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
+    <main className="max-w-6xl mx-auto p-6 space-y-6">
+      {/* Search Bar & Quick Tag Filters */}
+      <div className="space-y-3">
+        <div className="relative flex items-center max-w-md">
+          <Search className="w-4 h-4 absolute left-3 text-muted-foreground pointer-events-none" />
+          <Input
+            type="searchbar"
+            placeholder="Search cafe by name..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {searchName && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchName("")}
+              className="absolute right-1 h-7 w-7 text-muted-foreground hover:text-foreground"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
+
+        {/* Quick Tag Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-xs text-muted-foreground flex items-center gap-1 mr-1">
+            <Tag className="w-3 h-3" /> Quick filter:
+          </span>
+
+          {allTags.map((tag) => {
+            const isSelected = activeTag === tag
+            return (
+              <Badge
+                key={tag}
+                variant={isSelected ? "default" : "outline"}
+                className="cursor-pointer text-xs transition-colors"
+                onClick={() => setActiveTag(isSelected ? null : tag)}
+              >
+                {tag}
+              </Badge>
+            )
+          })}
+
+          {activeTag && (
+            <Button
+              variant="link"
+              size="sm"
+              className="text-xs h-auto p-0 text-muted-foreground"
+              onClick={() => setActiveTag(null)}
+            >
+              Reset tag filter
+            </Button>
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Cards Grid */}
+      {filteredCafes.length === 0 ? (
+        <div className="text-center py-16 border rounded-xl border-dashed">
+          <p className="text-sm text-muted-foreground">
+            No cafes found
+            {searchName ? ` matching "${searchName}"` : ""}
+            {activeTag ? ` with tag "${activeTag}"` : ""}.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCafes.map((cafe) => (
+            <CafeCard
+              key={cafe.name}
+              cafe={cafe}
+              onTagClick={(tag) => {
+                setActiveTag((prev) => (prev === tag ? null : tag))
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </main>
   )
 }
-
-export default App
