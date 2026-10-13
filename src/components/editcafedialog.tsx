@@ -37,7 +37,7 @@ export function EditCafeDialog({
   const [imageUrl, setImageUrl] = useState("")
   const [notes, setNotes] = useState("")
 
-  // Pre-fill fields whenever a cafe is selected
+  // Pre-fill fields whenever a cafe is selected option
   useEffect(() => {
     if (cafe) {
       setName(cafe.name)
