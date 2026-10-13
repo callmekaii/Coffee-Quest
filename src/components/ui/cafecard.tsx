@@ -5,34 +5,35 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Wifi, Zap, Volume2, Star } from "lucide-react"
+import { Wifi, Zap, Volume2, Star, Pencil } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface CafeCardProps {
   cafe: Cafe
   onTagClick?: (tag: string) => void
+  onEdit?: (cafe: Cafe) => void
 }
 
-export function CafeCard({ cafe, onTagClick }: CafeCardProps) {
+export function CafeCard({ cafe, onTagClick, onEdit }: CafeCardProps) {
   // Enforce limit of up to three tags
   const visibleTags = cafe.tags.slice(0, 3)
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col justify-between border-border/80 h-full">
+    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col justify-between border-border/80 h-full group">
       <div>
         {/* Image Container with Absolute Overlays */}
         <div className="relative h-48 w-full bg-muted overflow-hidden">
           <img
             src={cafe.imageUrl}
             alt={cafe.name}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
-          
-          {/* Tag Overlay - Top Left (Up to 3) */}
-          <div className="absolute top-3 left-3 flex flex-wrap gap-1 max-w-[70%]">
+
+          {/* Tag Overlay - Top Left */}
+          <div className="absolute top-3 left-3 flex flex-wrap gap-1 max-w-[65%]">
             {visibleTags.map((tag) => (
               <Badge
                 key={tag}
@@ -45,10 +46,26 @@ export function CafeCard({ cafe, onTagClick }: CafeCardProps) {
             ))}
           </div>
 
-          {/* Star Rating - Top Right */}
-          <div className="absolute top-3 right-3 bg-black/60 text-white backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 border-none">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 border-none" />
-            <span>{cafe.rating.toFixed(1)}</span>
+          {/* Top Right Controls: Rating + Edit Button */}
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5 z-10">
+            {/* Star Rating */}
+            <div className="bg-black/60 text-white backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 border-none shadow-sm">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 border-none" />
+              <span>{cafe.rating.toFixed(1)}</span>
+            </div>
+
+            {/* Edit Button */}
+            {onEdit && (
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-7 w-7 rounded-md bg-black/60 hover:bg-black/85 text-white border-none backdrop-blur-sm shadow-sm transition-all"
+                onClick={() => onEdit(cafe)}
+                title="Edit cafe"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -63,7 +80,7 @@ export function CafeCard({ cafe, onTagClick }: CafeCardProps) {
         </CardHeader>
 
         {/* Workspace Specs Grid */}
-        <CardContent className="px-5 pb-3">
+        <CardContent className="px-5 pb-4 space-y-3">
           <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-border/60 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5" title="WiFi Speed">
               <Wifi className="w-3.5 h-3.5 text-foreground shrink-0" />
@@ -83,20 +100,16 @@ export function CafeCard({ cafe, onTagClick }: CafeCardProps) {
               <Volume2 className="w-3.5 h-3.5 text-foreground shrink-0" />
               <span className="truncate">{cafe.noiseLevel}</span>
             </div>
-                <p className="text-sm col-span-3">
-                    {cafe.notes}
-                </p>
-
           </div>
+
+          {/* Notes display */}
+          {cafe.notes && (
+            <p className="text-xs text-muted-foreground italic line-clamp-2">
+              "{cafe.notes}"
+            </p>
+          )}
         </CardContent>
       </div>
-
-      {/* Optional Footnote / Review */}
-      {/* {cafe.notes && (
-        <CardFooter className="px-5 pt-0 pb-4 text-xs p-3 text-muted-foreground italic line-clamp-2">
-          "{cafe.notes}"
-        </CardFooter>
-      )} */}
     </Card>
   )
 }
