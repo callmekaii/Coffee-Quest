@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { MOCK_CAFES } from "@/data/mockdata"
 import type { Cafe } from "@/types/cafe"
 import { CafeCard } from "@/components/ui/cafecard"
@@ -6,11 +6,46 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { X, Tag, Search } from "lucide-react"
+import { LoginForm } from "@/components/login-form"
+import { supabase } from './utils/supabase'
+
 
 export default function App() {
-  const [cafes, setCafes] = useState<Cafe[]>(MOCK_CAFES)
+
+  const [cafes, setCafes] = useState<Cafe[]>([])
   const [searchName, setSearchName] = useState("")
   const [activeTag, setActiveTag] = useState<string | null>(null)
+
+      //database area
+  useEffect(() => {
+    async function getCafes() {
+      const { data, error } = await supabase.from('cafes').select()
+
+      if (error) {
+        console.error("Error fetching cafes:", error)
+      } 
+
+      if (data && data.length > 0) {
+        // Map Postgres snake_case columns to TypeScript Cafe properties
+        const formattedCafes: Cafe[] = data.map((item) => ({
+          name: item.name,
+          neighborhood: item.neighborhood,
+          address: item.address,
+          rating: Number(item.rating),
+          wifiSpeedMbps: item.wifi_speed_mbps,
+          hasOutlets: item.has_outlets,
+          noiseLevel: item.noise_level,
+          tags: item.tags || [],
+          imageUrl: item.image_url,
+          notes: item.notes,
+        }))
+
+        setCafes(formattedCafes)
+      }
+    }
+    getCafes()
+  }, [])
+
 
   // Extract all unique tags across all cafes for the quick filter pills
   const allTags = useMemo(() => {
@@ -37,9 +72,24 @@ export default function App() {
       return matchesName && matchesTag
     })
   }, [cafes, searchName, activeTag])
+  
 
   return (
+    
     <main className="max-w-6xl mx-auto p-6 space-y-6">
+      {/* db area */}
+      {/* <ul>
+      {cafes.map((cafe) => (
+        <li key={cafe.name}>{cafe.name}</li>
+      ))}
+      </ul> */}
+
+
+      <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+        <div className="w-full max-w-sm md:max-w-4xl">
+          <LoginForm />
+        </div>
+      </div>
       {/* Search Bar & Quick Tag Filters */}
       <div className="space-y-3">
         <div className="relative flex items-center max-w-md">
